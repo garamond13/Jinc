@@ -26,7 +26,7 @@
 #define AR 1.0 //antiringing strenght, [0.0, 1.0]
 //
 //kernel function parameters
-#define P1 0.0 //COSINE: n, BLACKMAN: a, GARAMOND: n, GNW: s, SAID: chi, FSR: b, BCSPLINE: B
+#define P1 0.0 //COSINE: n, GARAMOND: n, BLACKMAN: a, GNW: s, SAID: chi, FSR: b, BCSPLINE: B
 #define P2 0.0 //GARAMOND: m, BLACKMAN: n, GNW: n, SAID: eta, FSR: c, BCSPLINE: C
 //
 ////////////////////////////////////////////////////////////////////////
