@@ -42,7 +42,7 @@
 #define jinc(x) ((x) < EPSILON ? M_PI_2 / B : J1(M_PI / B * (x)) / (x))
 
 #if K == GINSENG
-    #define k(x) (jinc(x) * ((x) < EPSILON ? M_PI : sin(M_PI / R * (x)) * R / (x)))
+    #define k(x) (jinc(x) * ((x) < EPSILON ? M_PI / R : sin(M_PI / R * (x)) / (x)))
 #elif K == COSINE
     #define k(x) (jinc(x) * pow(cos(M_PI_2 / R * (x)), P1))
 #elif K == GARAMOND
