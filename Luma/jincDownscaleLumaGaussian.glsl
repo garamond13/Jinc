@@ -109,7 +109,7 @@ vec4 hook() {
 
 #define J1(x) ((x) < 2.293115733230086 ? ((x) / 2.0) - ((x) * (x) * (x) / 16.0) + ((x) * (x) * (x) * (x) * (x) / 384.0) - ((x) * (x) * (x) * (x) * (x) * (x) * (x) / 18432.0) : sqrt(M_2_PI / (x)) * (1.0 + 3.0 / 16.0 / ((x) * (x)) - 99.0 / 512.0 / ((x) * (x) * (x) * (x))) * cos((x) - 3.0 * M_PI_4 + 3.0 / 8.0 / (x) - 21.0 / 128.0 / ((x) * (x) * (x))))
 
-#define jinc(x) ((x) < EPSILON ? M_PI_2 : J1(M_PI / B * (x)) * B / (x))
+#define jinc(x) ((x) < EPSILON ? M_PI_2 / B : J1(M_PI / B * (x)) / (x))
 
 #if K == GINSENG
     #define k(x) (jinc(x) * ((x) < EPSILON ? M_PI : sin(M_PI / R * (x)) * R / (x)))
