@@ -20,7 +20,7 @@ vec4 hook() {
 // CAUTION! probably should use the same settings for "USER CONFIGURABLE, PASS 3" below
 //
 #define S 1.0 //blur spread or amount, (0.0, 10+]
-#define R 3.0 //kernel radius (integer as float, e.g. 3.0), (0.0, 10+]; probably should set it to ceil(3 * S)
+#define R 2.0 //kernel radius (integer as float, e.g. 3.0), (0.0, 10+]
 //
 ////////////////////////////////////////////////////////////////////////
 
@@ -50,7 +50,7 @@ vec4 hook() {
 // CAUTION! probably should use the same settings for "USER CONFIGURABLE, PASS 2" above
 //
 #define S 1.0 //blur spread or amount, (0.0, 10+]
-#define R 3.0 //kernel radius (integer as float, e.g. 3.0), (0.0, 10+]; probably should set it to ceil(3 * S)
+#define R 2.0 //kernel radius (integer as float, e.g. 3.0), (0.0, 10+]
 //
 ////////////////////////////////////////////////////////////////////////
 
@@ -101,18 +101,18 @@ vec4 hook() {
 //
 ////////////////////////////////////////////////////////////////////////
 
-#define M_PI 3.14159265358979323846
-#define M_PI_2 1.57079632679489661923
-#define M_PI_4 0.785398163397448309616
-#define M_2_PI 0.636619772367581343076
-#define EPSILON 1.192093e-7
+#define M_PI 3.1415927
+#define M_PI_2 1.5707963
+#define M_PI_4 0.7853982
+#define M_2_PI 0.6366198
+#define EPS 1e-6
 
-#define J1(x) ((x) < 2.2931157332 ? ((x) / 2.0) - ((x) * (x) * (x) / 16.0) + ((x) * (x) * (x) * (x) * (x) / 384.0) - ((x) * (x) * (x) * (x) * (x) * (x) * (x) / 18432.0) : sqrt(M_2_PI / (x)) * (1.0 + 0.1875 / ((x) * (x)) - 0.193359375 / ((x) * (x) * (x) * (x))) * cos((x) - 3.0 * M_PI_4 + 0.375 / (x) - 0.1640625 / ((x) * (x) * (x))))
+#define J1(x) ((x) < 2.2931157 ? ((x) / 2.0) - ((x) * (x) * (x) / 16.0) + ((x) * (x) * (x) * (x) * (x) / 384.0) - ((x) * (x) * (x) * (x) * (x) * (x) * (x) / 18432.0) : sqrt(M_2_PI / (x)) * (1.0 + 0.1875 / ((x) * (x)) - 0.1933594 / ((x) * (x) * (x) * (x))) * cos((x) - 3.0 * M_PI_4 + 0.375 / (x) - 0.1640625 / ((x) * (x) * (x))))
 
-#define jinc(x) ((x) < EPSILON ? M_PI_2 / B : J1(M_PI / B * (x)) / (x))
+#define jinc(x) ((x) < EPS ? M_PI_2 / B : J1(M_PI / B * (x)) / (x))
 
 #if K == GINSENG
-    #define k(x) (jinc(x) * ((x) < EPSILON ? M_PI / R : sin(M_PI / R * (x)) / (x)))
+    #define k(x) (jinc(x) * ((x) < EPS ? M_PI / R : sin(M_PI / R * (x)) / (x)))
 #elif K == COSINE
     #define k(x) (jinc(x) * pow(cos(M_PI_2 / R * (x)), P1))
 #elif K == GARAMOND
