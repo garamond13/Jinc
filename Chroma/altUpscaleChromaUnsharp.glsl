@@ -19,7 +19,7 @@
 #define sigmoidize(rgba) (M - log(1.0 / ((1.0 / (1.0 + exp(C * (M - 1.0))) - 1.0 / (1.0 + exp(C * M))) * (rgba) + 1.0 / (1.0 + exp(C * M))) - 1.0) / C)
 
 vec4 hook() {
-    return sigmoidize(clamp(linearize(textureLod(HOOKED_raw, HOOKED_pos, 0.0) * HOOKED_mul), 0.0, 1.0));
+	return sigmoidize(clamp(linearize(HOOKED_tex(HOOKED_pos)), 0.0, 1.0));
 }
 
 //!HOOK CHROMA
@@ -72,25 +72,25 @@ vec4 hook() {
 #define jinc(x) ((x) < EPS ? M_PI_2 / B : J1(M_PI / B * (x)) / (x))
 
 #if K == GINSENG
-    #define k(x) (jinc(x) * ((x) < EPS ? M_PI / R : sin(M_PI / R * (x)) / (x)))
+	#define k(x) (jinc(x) * ((x) < EPS ? M_PI / R : sin(M_PI / R * (x)) / (x)))
 #elif K == COSINE
-    #define k(x) (jinc(x) * pow(cos(M_PI_2 / R * (x)), P1))
+	#define k(x) (jinc(x) * pow(cos(M_PI_2 / R * (x)), P1))
 #elif K == GARAMOND
-    #define k(x) (jinc(x) * pow(1.0 - pow((x) / R, P1), P2))
+	#define k(x) (jinc(x) * pow(1.0 - pow((x) / R, P1), P2))
 #elif K == BLACKMAN
-    #define k(x) (jinc(x) * pow((1.0 - P1) / 2.0 + 0.5 * cos(M_PI / R * (x)) + P1 / 2.0 * cos(2.0 * M_PI / R * (x)), P2))
+	#define k(x) (jinc(x) * pow((1.0 - P1) / 2.0 + 0.5 * cos(M_PI / R * (x)) + P1 / 2.0 * cos(2.0 * M_PI / R * (x)), P2))
 #elif K == GNW
-    #define k(x) (jinc(x) * exp(-pow((x) / P1, P2)))
+	#define k(x) (jinc(x) * exp(-pow((x) / P1, P2)))
 #elif K == SAID
-    #define k(x) (jinc(x) * cosh(sqrt(2.0 * P2) * M_PI * P1 / (2.0 - P2) * (x)) * exp(-M_PI * M_PI * P1 * P1 / ((2.0 - P2) * (2.0 - P2)) * (x) * (x)))
+	#define k(x) (jinc(x) * cosh(sqrt(2.0 * P2) * M_PI * P1 / (2.0 - P2) * (x)) * exp(-M_PI * M_PI * P1 * P1 / ((2.0 - P2) * (2.0 - P2)) * (x) * (x)))
 #elif K == FSR
-    #undef R
-    #define R 2.0
-    #define k(x) ((1.0 / (2.0 * P1 - P1 * P1) * (P1 / (P2 * P2) * (x) * (x) - 1.0) * (P1 / (P2 * P2) * (x) * (x) - 1.0) - (1.0 / (2.0 * P1 - P1 * P1) - 1.0)) * (0.25 * (x) * (x) - 1.0) * (0.25 * (x) * (x) - 1.0))
+	#undef R
+	#define R 2.0
+	#define k(x) ((1.0 / (2.0 * P1 - P1 * P1) * (P1 / (P2 * P2) * (x) * (x) - 1.0) * (P1 / (P2 * P2) * (x) * (x) - 1.0) - (1.0 / (2.0 * P1 - P1 * P1) - 1.0)) * (0.25 * (x) * (x) - 1.0) * (0.25 * (x) * (x) - 1.0))
 #elif K == BCSPLINE
-    #undef R
-    #define R 2.0
-    #define k(x) ((x) < 1.0 ? (12.0 - 9.0 * P1 - 6.0 * P2) * (x) * (x) * (x) + (-18.0 + 12.0 * P1 + 6.0 * P2) * (x) * (x) + (6.0 - 2.0 * P1) : (-P1 - 6.0 * P2) * (x) * (x) * (x) + (6.0 * P1 + 30.0 * P2) * (x) * (x) + (-12.0 * P1 - 48.0 * P2) * (x) + (8.0 * P1 + 24.0 * P2))
+	#undef R
+	#define R 2.0
+	#define k(x) ((x) < 1.0 ? (12.0 - 9.0 * P1 - 6.0 * P2) * (x) * (x) * (x) + (-18.0 + 12.0 * P1 + 6.0 * P2) * (x) * (x) + (6.0 - 2.0 * P1) : (-P1 - 6.0 * P2) * (x) * (x) * (x) + (6.0 * P1 + 30.0 * P2) * (x) * (x) + (-12.0 * P1 - 48.0 * P2) * (x) + (8.0 * P1 + 24.0 * P2))
 #endif
 
 #define get_weight(x) ((x) < R ? k(x) : 0.0)
@@ -99,30 +99,30 @@ vec4 hook() {
 #define desigmoidize(rgba) (1.0 / (1.0 + exp(C * (M - (rgba)))) - 1.0 / (1.0 + exp(C * M))) / ( 1.0 / (1.0 + exp(C * (M - 1.0))) - 1.0 / (1.0 + exp(C * M)))
 
 vec4 hook() {
-    vec2 f = fract(PASS1_pos * input_size - 0.5);
-    vec2 base = PASS1_pos - f * PASS1_pt;
-    vec4 color;
-    vec4 csum = vec4(0.0);
-    float weight;
-    float wsum = 0.0;
-    vec4 lo = vec4(1e9);
-    vec4 hi = vec4(-1e9);
-    for (float y = 1.0 - ceil(R); y <= ceil(R); ++y) {
-        for (float x = 1.0 - ceil(R); x <= ceil(R); ++x) {
-            weight = get_weight(length(vec2(x, y) - f));
-            color = textureLod(PASS1_raw, base + PASS1_pt * vec2(x, y), 0.0) * PASS1_mul;
-            csum += color * weight;
-            wsum += weight;
-            if (AR > 0.0 && y >= 0.0 && y <= 1.0 && x >= 0.0 && x <= 1.0) {
-                lo = min(lo, color);
-                hi = max(hi, color);
-            }
-        }
-    }
-    csum /= wsum;
-    if (AR > 0.0)
-        csum = mix(csum, clamp(csum, lo, hi), AR);
-    return desigmoidize(csum);
+	vec2 f = fract(PASS1_pos * PASS1_size - 0.5);
+	vec2 base = PASS1_pos - f * PASS1_pt;
+	vec4 color;
+	vec4 csum = vec4(0.0);
+	float weight;
+	float wsum = 0.0;
+	vec4 lo = vec4(1e9);
+	vec4 hi = vec4(-1e9);
+	for (float y = 1.0 - ceil(R); y <= ceil(R); ++y) {
+		for (float x = 1.0 - ceil(R); x <= ceil(R); ++x) {
+			weight = get_weight(length(vec2(x, y) - f));
+			color = PASS1_tex(base + vec2(x, y) * PASS1_pt);
+			csum += color * weight;
+			wsum += weight;
+			if (AR > 0.0 && y >= 0.0 && y <= 1.0 && x >= 0.0 && x <= 1.0) {
+				lo = min(lo, color);
+				hi = max(hi, color);
+			}
+		}
+	}
+	csum /= wsum;
+	if (AR > 0.0)
+		csum = mix(csum, clamp(csum, lo, hi), AR);
+	return desigmoidize(csum);
 }
 
 //!HOOK CHROMA
@@ -146,15 +146,15 @@ vec4 hook() {
 #define get_weight(x) (exp(-(x) * (x) / (2.0 * S * S)))
 
 vec4 hook() {
-    float weight;
-    vec4 csum = textureLod(PASS2_raw, PASS2_pos, 0.0) * PASS2_mul;
-    float wsum = 1.0;
-    for(float i = 1.0; i <= R; ++i) {
-        weight = get_weight(i);
-        csum += (textureLod(PASS2_raw, PASS2_pos + PASS2_pt * vec2(0.0, -i), 0.0) + textureLod(PASS2_raw, PASS2_pos + PASS2_pt * vec2(0.0, i), 0.0)) * PASS2_mul * weight;
-        wsum += 2.0 * weight;
-    }
-    return csum / wsum;
+	float weight;
+	vec4 csum = PASS2_tex(PASS2_pos);
+	float wsum = 1.0;
+	for (float i = 1.0; i <= R; ++i) {
+		weight = get_weight(i);
+		csum += (PASS2_tex(PASS2_pos + vec2(0.0, -i) * PASS2_pt) + PASS2_tex(PASS2_pos + vec2(0.0, i) * PASS2_pt)) * weight;
+		wsum += 2.0 * weight;
+	}
+	return csum / wsum;
 }
 
 //!HOOK CHROMA
@@ -181,14 +181,14 @@ vec4 hook() {
 #define get_weight(x) (exp(-(x) * (x) / (2.0 * S * S)))
 
 vec4 hook() {
-    float weight;
-    vec4 csum = textureLod(PASS3_raw, PASS3_pos, 0.0) * PASS3_mul;
-    float wsum = 1.0;
-    for(float i = 1.0; i <= R; ++i) {
-        weight = get_weight(i);
-        csum += (textureLod(PASS3_raw, PASS3_pos + PASS3_pt * vec2(-i, 0.0), 0.0) + textureLod(PASS3_raw, PASS3_pos + PASS3_pt * vec2(i, 0.0), 0.0)) * PASS3_mul * weight;
-        wsum += 2.0 * weight;
-    }
-    vec4 original = textureLod(PASS2_raw, PASS2_pos, 0.0) * PASS2_mul;
-    return delinearize(original + (original - csum / wsum) * A);
+	float weight;
+	vec4 csum = PASS3_tex(PASS3_pos);
+	float wsum = 1.0;
+	for (float i = 1.0; i <= R; ++i) {
+		weight = get_weight(i);
+		csum += (PASS3_tex(PASS3_pos + vec2(-i, 0.0) * PASS3_pt) + PASS3_tex(PASS3_pos + vec2(i, 0.0) * PASS3_pt)) * weight;
+		wsum += 2.0 * weight;
+	}
+	vec4 original = PASS2_tex(PASS2_pos);
+	return delinearize(original + (original - csum / wsum) * A);
 }

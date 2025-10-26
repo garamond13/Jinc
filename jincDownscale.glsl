@@ -5,7 +5,7 @@
 //!DESC jinc downscale pass1
 
 vec4 hook() {
-    return linearize(textureLod(HOOKED_raw, HOOKED_pos, 0.0) * HOOKED_mul);
+	return linearize(HOOKED_tex(HOOKED_pos));
 }
 
 //!HOOK MAIN
@@ -52,43 +52,43 @@ vec4 hook() {
 #define jinc(x) ((x) < EPS ? M_PI_2 / B : J1(M_PI / B * (x)) / (x))
 
 #if K == GINSENG
-    #define k(x) (jinc(x) * ((x) < EPS ? M_PI / R : sin(M_PI / R * (x)) / (x)))
+	#define k(x) (jinc(x) * ((x) < EPS ? M_PI / R : sin(M_PI / R * (x)) / (x)))
 #elif K == COSINE
-    #define k(x) (jinc(x) * pow(cos(M_PI_2 / R * (x)), P1))
+	#define k(x) (jinc(x) * pow(cos(M_PI_2 / R * (x)), P1))
 #elif K == GARAMOND
-    #define k(x) (jinc(x) * pow(1.0 - pow((x) / R, P1), P2))
+	#define k(x) (jinc(x) * pow(1.0 - pow((x) / R, P1), P2))
 #elif K == BLACKMAN
-    #define k(x) (jinc(x) * pow((1.0 - P1) / 2.0 + 0.5 * cos(M_PI / R * (x)) + P1 / 2.0 * cos(2.0 * M_PI / R * (x)), P2))
+	#define k(x) (jinc(x) * pow((1.0 - P1) / 2.0 + 0.5 * cos(M_PI / R * (x)) + P1 / 2.0 * cos(2.0 * M_PI / R * (x)), P2))
 #elif K == GNW
-    #define k(x) (jinc(x) * exp(-pow((x) / P1, P2)))
+	#define k(x) (jinc(x) * exp(-pow((x) / P1, P2)))
 #elif K == SAID
-    #define k(x) (jinc(x) * cosh(sqrt(2.0 * P2) * M_PI * P1 / (2.0 - P2) * (x)) * exp(-M_PI * M_PI * P1 * P1 / ((2.0 - P2) * (2.0 - P2)) * (x) * (x)))
+	#define k(x) (jinc(x) * cosh(sqrt(2.0 * P2) * M_PI * P1 / (2.0 - P2) * (x)) * exp(-M_PI * M_PI * P1 * P1 / ((2.0 - P2) * (2.0 - P2)) * (x) * (x)))
 #elif K == FSR
-    #undef R
-    #define R 2.0
-    #define k(x) ((1.0 / (2.0 * P1 - P1 * P1) * (P1 / (P2 * P2) * (x) * (x) - 1.0) * (P1 / (P2 * P2) * (x) * (x) - 1.0) - (1.0 / (2.0 * P1 - P1 * P1) - 1.0)) * (0.25 * (x) * (x) - 1.0) * (0.25 * (x) * (x) - 1.0))
+	#undef R
+	#define R 2.0
+	#define k(x) ((1.0 / (2.0 * P1 - P1 * P1) * (P1 / (P2 * P2) * (x) * (x) - 1.0) * (P1 / (P2 * P2) * (x) * (x) - 1.0) - (1.0 / (2.0 * P1 - P1 * P1) - 1.0)) * (0.25 * (x) * (x) - 1.0) * (0.25 * (x) * (x) - 1.0))
 #elif K == BCSPLINE
-    #undef R
-    #define R 2.0
-    #define k(x) ((x) < 1.0 ? (12.0 - 9.0 * P1 - 6.0 * P2) * (x) * (x) * (x) + (-18.0 + 12.0 * P1 + 6.0 * P2) * (x) * (x) + (6.0 - 2.0 * P1) : (-P1 - 6.0 * P2) * (x) * (x) * (x) + (6.0 * P1 + 30.0 * P2) * (x) * (x) + (-12.0 * P1 - 48.0 * P2) * (x) + (8.0 * P1 + 24.0 * P2))
+	#undef R
+	#define R 2.0
+	#define k(x) ((x) < 1.0 ? (12.0 - 9.0 * P1 - 6.0 * P2) * (x) * (x) * (x) + (-18.0 + 12.0 * P1 + 6.0 * P2) * (x) * (x) + (6.0 - 2.0 * P1) : (-P1 - 6.0 * P2) * (x) * (x) * (x) + (6.0 * P1 + 30.0 * P2) * (x) * (x) + (-12.0 * P1 - 48.0 * P2) * (x) + (8.0 * P1 + 24.0 * P2))
 #endif
 
 #define get_weight(x) ((x) < R ? k(x) : 0.0)
 
-#define SCALE (max(input_size.y / target_size.y, input_size.x / target_size.x) * AA)
+#define SCALE (max(PASS1_size.y / target_size.y, PASS1_size.x / target_size.x) * AA)
 
 vec4 hook() {
-    vec2 f = fract(PASS1_pos * input_size - 0.5);
-    vec2 base = PASS1_pos - f * PASS1_pt;
-    vec4 csum = vec4(0.0);
-    float weight;
-    float wsum = 0.0;
-    for (float y = 1.0 - ceil(R * SCALE); y <= ceil(R * SCALE); ++y) {
-        for (float x = 1.0 - ceil(R * SCALE); x <= ceil(R * SCALE); ++x) {
-            weight = get_weight(length(vec2(x, y) - f) / SCALE);
-            csum += textureLod(PASS1_raw, base + PASS1_pt * vec2(x, y), 0.0) * PASS1_mul * weight;
-            wsum += weight;
-        }
-    }
-    return delinearize(csum / wsum);
+	vec2 f = fract(PASS1_pos * PASS1_size - 0.5);
+	vec2 base = PASS1_pos - f * PASS1_pt;
+	vec4 csum = vec4(0.0);
+	float weight;
+	float wsum = 0.0;
+	for (float y = 1.0 - ceil(R * SCALE); y <= ceil(R * SCALE); ++y) {
+		for (float x = 1.0 - ceil(R * SCALE); x <= ceil(R * SCALE); ++x) {
+			weight = get_weight(length(vec2(x, y) - f) / SCALE);
+			csum += PASS1_tex(base + vec2(x, y) * PASS1_pt) * weight;
+			wsum += weight;
+		}
+	}
+	return delinearize(csum / wsum);
 }

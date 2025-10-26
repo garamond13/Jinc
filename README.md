@@ -6,8 +6,6 @@ Mpv's image scaling user shader based on jinc, similar to mpv's built in ewa or 
 
 `jincUpscale` is optimised for and only does upscaling\
 `jincUpscaleUnsharp` is optimised for and only does upscaling, also provides unsharp mask\
-`jincUpscaleHDR` is optimised for and only does upscaling; HDR version\
-`jincUpscaleUnsharpHDR` is optimised for and only does upscaling, also provides unsharp mask; HDR version\
 `jincDownscale` is optimised for and only does downscaling\
 `jincDownscaleUnsharp` is optimised for and only does downscaling, also provides unsharp mask\
 `jincDownscaleGaussian` is optimised for and only does downscaling, also provides gaussian blur\
@@ -17,8 +15,6 @@ Mpv's image scaling user shader based on jinc, similar to mpv's built in ewa or 
 - If you place this shader in the same folder as your `mpv.conf`, you can use it with `glsl-shaders-append="~~/FILE_NAME"`. For an example `glsl-shaders-append="~~/jincUpscale.glsl"`.
 - Requires `vo=gpu-next`.
 - Note that defualt settings are "simbolic" only, should change them to your liking.
-- Note that all downscale shaders can be used for both SDR and HDR content.
-- Note that HDR versions are just gamma light so you can use them for SDR
 
 ## Settings
 
