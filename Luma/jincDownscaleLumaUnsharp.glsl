@@ -4,7 +4,8 @@
 //!WHEN OUTPUT.w OUTPUT.h * LUMA.w LUMA.h * <
 //!DESC jinc downscale luma pass1
 
-vec4 hook() {
+vec4 hook()
+{
 	return linearize(HOOKED_tex(HOOKED_pos));
 }
 
@@ -33,7 +34,6 @@ vec4 hook() {
 #define K GINSENG // kernel function, see "KERNEL FUNCTIONS LIST"
 #define R 2.0 // kernel radius, (0.0, inf)
 #define B 1.0 // kernel blur, (0.0, inf)
-#define AA 1.0 // antialiasing amount, (0.0, inf)
 //
 // kernel function parameters
 #define P1 0.0 // COSINE: n, GARAMOND: n, BLACKMAN: a, GNW: s, SAID: chi, FSR: b, BCSPLINE: B
@@ -75,22 +75,22 @@ vec4 hook() {
 
 #define get_weight(x) ((x) < R ? k(x) : 0.0)
 
-#define SCALE (max(PASS1_size.y / target_size.y, PASS1_size.x / target_size.x) * AA)
-
-vec4 hook() {
+vec4 hook()
+{
 	vec2 f = fract(PASS1_pos * PASS1_size - 0.5);
 	vec2 base = PASS1_pos - f * PASS1_pt;
-	vec4 csum = vec4(0.0);
+	float csum = 0.0;
 	float weight;
 	float wsum = 0.0;
-	for (float y = 1.0 - ceil(R * SCALE); y <= ceil(R * SCALE); ++y) {
-		for (float x = 1.0 - ceil(R * SCALE); x <= ceil(R * SCALE); ++x) {
-			weight = get_weight(length(vec2(x, y) - f) / SCALE);
-			csum += PASS1_tex(base + vec2(x, y) * PASS1_pt) * weight;
+	float scale = max(PASS1_size.y / target_size.y, PASS1_size.x / target_size.x);
+	for (float y = 1.0 - ceil(R * scale); y <= ceil(R * scale); ++y) {
+		for (float x = 1.0 - ceil(R * scale); x <= ceil(R * scale); ++x) {
+			weight = get_weight(length(vec2(x, y) - f) / scale);
+			csum += PASS1_tex(base + vec2(x, y) * PASS1_pt).x * weight;
 			wsum += weight;
 		}
 	}
-	return csum / wsum;
+	return vec4(csum / wsum, 0.0, 0.0, 0.0);
 }
 
 //!HOOK LUMA
@@ -113,16 +113,17 @@ vec4 hook() {
 
 #define get_weight(x) (exp(-(x) * (x) / (2.0 * S * S)))
 
-vec4 hook() {
+vec4 hook()
+{
 	float weight;
-	vec4 csum = PASS2_tex(PASS2_pos);
+	float csum = PASS2_tex(PASS2_pos).x;
 	float wsum = 1.0;
 	for (float i = 1.0; i <= R; ++i) {
 		weight = get_weight(i);
-		csum += (PASS2_tex(PASS2_pos + vec2(0.0, -i) * PASS2_pt) + PASS2_tex(PASS2_pos + vec2(0.0, i) * PASS2_pt)) * weight;
+		csum += (PASS2_tex(PASS2_pos + vec2(0.0, -i) * PASS2_pt).x + PASS2_tex(PASS2_pos + vec2(0.0, i) * PASS2_pt).x) * weight;
 		wsum += 2.0 * weight;
 	}
-	return csum / wsum;
+	return vec4(csum / wsum, 0.0, 0.0, 0.0);
 }
 
 //!HOOK LUMA
@@ -148,15 +149,16 @@ vec4 hook() {
 
 #define get_weight(x) (exp(-(x) * (x) / (2.0 * S * S)))
 
-vec4 hook() {
+vec4 hook()
+{
 	float weight;
-	vec4 csum = PASS3_tex(PASS3_pos);
+	float csum = PASS3_tex(PASS3_pos).x;
 	float wsum = 1.0;
 	for (float i = 1.0; i <= R; ++i) {
 		weight = get_weight(i);
-		csum += (PASS3_tex(PASS3_pos + vec2(-i, 0.0) * PASS3_pt) + PASS3_tex(PASS3_pos + vec2(i, 0.0) * PASS3_pt)) * weight;
+		csum += (PASS3_tex(PASS3_pos + vec2(-i, 0.0) * PASS3_pt).x + PASS3_tex(PASS3_pos + vec2(i, 0.0) * PASS3_pt).x) * weight;
 		wsum += 2.0 * weight;
 	}
-	vec4 original = PASS2_tex(PASS2_pos);
-	return delinearize(original + (original - csum / wsum) * A);
+	float original = PASS2_tex(PASS2_pos).x;
+	return delinearize(vec4(original + (original - csum / wsum) * A, 0.0, 0.0, 0.0));
 }

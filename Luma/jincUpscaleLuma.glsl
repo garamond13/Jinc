@@ -18,8 +18,9 @@
 // based on https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/enhance.c
 #define sigmoidize(rgba) (M - log(1.0 / ((1.0 / (1.0 + exp(C * (M - 1.0))) - 1.0 / (1.0 + exp(C * M))) * (rgba) + 1.0 / (1.0 + exp(C * M))) - 1.0) / C)
 
-vec4 hook() {
-	return sigmoidize(clamp(linearize(HOOKED_tex(HOOKED_pos)), 0.0, 1.0));
+vec4 hook()
+{
+	return vec4(sigmoidize(clamp(linearize(HOOKED_tex(HOOKED_pos)).x, 0.0, 1.0)), 0.0, 0.0, 0.0);
 }
 
 //!HOOK LUMA
@@ -97,19 +98,20 @@ vec4 hook() {
 // based on https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/enhance.c
 #define desigmoidize(rgba) (1.0 / (1.0 + exp(C * (M - (rgba)))) - 1.0 / (1.0 + exp(C * M))) / ( 1.0 / (1.0 + exp(C * (M - 1.0))) - 1.0 / (1.0 + exp(C * M)))
 
-vec4 hook() {
+vec4 hook()
+{
 	vec2 f = fract(PASS1_pos * PASS1_size - 0.5);
 	vec2 base = PASS1_pos - f * PASS1_pt;
-	vec4 color;
-	vec4 csum = vec4(0.0);
+	float color;
+	float csum = 0.0;
 	float weight;
 	float wsum = 0.0;
-	vec4 lo = vec4(1e9);
-	vec4 hi = vec4(-1e9);
+	float lo = 1e9;
+	float hi = -1e9;
 	for (float y = 1.0 - ceil(R); y <= ceil(R); ++y) {
 		for (float x = 1.0 - ceil(R); x <= ceil(R); ++x) {
 			weight = get_weight(length(vec2(x, y) - f));
-			color = PASS1_tex(base + vec2(x, y) * PASS1_pt);
+			color = PASS1_tex(base + vec2(x, y) * PASS1_pt).x;
 			csum += color * weight;
 			wsum += weight;
 			if (AR > 0.0 && y >= 0.0 && y <= 1.0 && x >= 0.0 && x <= 1.0) {
@@ -121,5 +123,5 @@ vec4 hook() {
 	csum /= wsum;
 	if (AR > 0.0)
 		csum = mix(csum, clamp(csum, lo, hi), AR);
-	return delinearize(desigmoidize(csum));
+	return delinearize(vec4(desigmoidize(csum), 0.0, 0.0, 0.0));
 }

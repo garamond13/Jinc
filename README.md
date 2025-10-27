@@ -11,13 +11,14 @@ Mpv's image scaling user shader based on jinc, similar to mpv's built in ewa or 
 `jincDownscaleGaussian` is optimised for and only does downscaling, also provides gaussian blur\
 `jincDownscaleGaussianUnsharp` is optimised for and only does downscaling, also provides gaussian blur and unsharp mask
 
+Note that old main versions are now in the old branch.
+
 ## Usage
 - If you place this shader in the same folder as your `mpv.conf`, you can use it with `glsl-shaders-append="~~/FILE_NAME"`. For an example `glsl-shaders-append="~~/jincUpscale.glsl"`.
 - Requires `vo=gpu-next`.
 - Note that defualt settings are "simbolic" only, should change them to your liking.
 
 ## Settings
-
 For better understanding of these settings see research https://github.com/garamond13/Finding-the-best-methods-for-image-scaling  
 For finding the best parameters you can use [BestScalingParamsFinder](https://github.com/garamond13/BestScalingParamsFinder)
 
@@ -38,12 +39,14 @@ Effectively trades between aliasing and ringing artifacts. The default value is 
 
 #### Kernel functions parameters (P1) and (P2)
 Some kernel functions take additional parameters, they are set here. \
+
 **COSINE** (Power of Cosine) - https://en.wikipedia.org/wiki/Window_function#Power-of-sine/cosine_windows \
 n = P1  
 Has to be satisfied: n >= 0  
 n = 0: Box window  
 n = 1: Cosine window  
 n = 2: Hann window  
+
 **GARAMOND** (Power of Garamond) - https://github.com/garamond13/power-of-garamond-window \
 n = P1, m = P2  
 Has to be satisfied: n >= 0, m >= 0  
@@ -53,6 +56,7 @@ n -> inf, m <= 1: Box window
 m = 1: Garamond window  
 n = 1, m = 1: Linear window  
 n = 2, m = 1: Welch window  
+
 **BLACKMAN** (Power of Blackman)- https://github.com/garamond13/power-of-blackman \
 a = P1, n = P2  
 Has to be satisfied: n >= 0  
@@ -61,18 +65,22 @@ n = 0: Box window
 n = 1: Blackman window  
 a = 0, n = 1: Hann window  
 a = 0, n = 0.5: Cosine window  
+
 **GNW** (Generalized Normal Window) - https://ieeexplore.ieee.org/document/6638833 \
 s = P1, n = P2  
 Has to be satisfied: s != 0, n >= 0  
 n -> inf: Box window  
 n = 2: Gaussian window  
+
 **SAID** - https://www.hpl.hp.com/techreports/2007/HPL-2007-179.pdf \
 eta = P1, chi = P2  
 Has to be satisfied: eta != 2  
+
 **FSR** (Modified FSR kernel, based on https://github.com/GPUOpen-Effects/FidelityFX-FSR) - for referernce see the research above \
 b = P1, c = P2  
 Has to be satisfied: b != 0, b != 2, c != 0  
 c = 1: FSR kernel  
+
 **BCSPLINE** - https://www.cs.utexas.edu/~fussell/courses/cs384g-fall2013/lectures/mitchell/Mitchell.pdf  
 B = P1, C = P2  
 Keys kernels: B + 2C = 1  
@@ -84,7 +92,7 @@ B = 12 / (19 + 9 * sqrt(2)), C = 113 / (58 + 216 * sqrt(2)): Robidoux kernel
 B = 6 / (13 + 7 * sqrt(2)), C = 7 / (2 + 12 * sqrt(2)): RobidouxSharp kernel  
 B = (9 - 3 * sqrt(2)) / 7, C = 0.1601886205085204: RobidouxSoft kernel  
 
-#### Sigmoidal curve settings (C) and (M) (Only for upscale and not part of HDR versions)
+#### Sigmoidal curve settings (C) and (M) (Only for upscale versions)
 Contrast `C` is equivalent to mpv's `--sigmoid-slope` and midpoint `M` is equivalent to mpv's `--sigmoid-center`.
 
 ### Gaussian blur and unsharp mask (Only for gaussian and unsharp versions)

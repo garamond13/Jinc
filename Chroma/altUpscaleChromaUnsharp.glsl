@@ -18,8 +18,9 @@
 // based on https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/enhance.c
 #define sigmoidize(rgba) (M - log(1.0 / ((1.0 / (1.0 + exp(C * (M - 1.0))) - 1.0 / (1.0 + exp(C * M))) * (rgba) + 1.0 / (1.0 + exp(C * M))) - 1.0) / C)
 
-vec4 hook() {
-	return sigmoidize(clamp(linearize(HOOKED_tex(HOOKED_pos)), 0.0, 1.0));
+vec4 hook()
+{
+	return vec4(sigmoidize(clamp(linearize(HOOKED_tex(HOOKED_pos)).xy, 0.0, 1.0)), 0.0, 0.0);
 }
 
 //!HOOK CHROMA
@@ -98,19 +99,20 @@ vec4 hook() {
 // based on https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/enhance.c
 #define desigmoidize(rgba) (1.0 / (1.0 + exp(C * (M - (rgba)))) - 1.0 / (1.0 + exp(C * M))) / ( 1.0 / (1.0 + exp(C * (M - 1.0))) - 1.0 / (1.0 + exp(C * M)))
 
-vec4 hook() {
+vec4 hook()
+{
 	vec2 f = fract(PASS1_pos * PASS1_size - 0.5);
 	vec2 base = PASS1_pos - f * PASS1_pt;
-	vec4 color;
-	vec4 csum = vec4(0.0);
+	vec2 color;
+	vec2 csum = vec2(0.0);
 	float weight;
 	float wsum = 0.0;
-	vec4 lo = vec4(1e9);
-	vec4 hi = vec4(-1e9);
+	vec2 lo = vec2(1e9);
+	vec2 hi = vec2(-1e9);
 	for (float y = 1.0 - ceil(R); y <= ceil(R); ++y) {
 		for (float x = 1.0 - ceil(R); x <= ceil(R); ++x) {
 			weight = get_weight(length(vec2(x, y) - f));
-			color = PASS1_tex(base + vec2(x, y) * PASS1_pt);
+			color = PASS1_tex(base + vec2(x, y) * PASS1_pt).xy;
 			csum += color * weight;
 			wsum += weight;
 			if (AR > 0.0 && y >= 0.0 && y <= 1.0 && x >= 0.0 && x <= 1.0) {
@@ -122,7 +124,7 @@ vec4 hook() {
 	csum /= wsum;
 	if (AR > 0.0)
 		csum = mix(csum, clamp(csum, lo, hi), AR);
-	return desigmoidize(csum);
+	return vec4(desigmoidize(csum), 0.0, 0.0);
 }
 
 //!HOOK CHROMA
@@ -145,16 +147,17 @@ vec4 hook() {
 
 #define get_weight(x) (exp(-(x) * (x) / (2.0 * S * S)))
 
-vec4 hook() {
+vec4 hook()
+{
 	float weight;
-	vec4 csum = PASS2_tex(PASS2_pos);
+	vec2 csum = PASS2_tex(PASS2_pos).xy;
 	float wsum = 1.0;
 	for (float i = 1.0; i <= R; ++i) {
 		weight = get_weight(i);
-		csum += (PASS2_tex(PASS2_pos + vec2(0.0, -i) * PASS2_pt) + PASS2_tex(PASS2_pos + vec2(0.0, i) * PASS2_pt)) * weight;
+		csum += (PASS2_tex(PASS2_pos + vec2(0.0, -i) * PASS2_pt).xy + PASS2_tex(PASS2_pos + vec2(0.0, i) * PASS2_pt).xy) * weight;
 		wsum += 2.0 * weight;
 	}
-	return csum / wsum;
+	return vec4(csum / wsum, 0.0, 0.0);
 }
 
 //!HOOK CHROMA
@@ -180,15 +183,16 @@ vec4 hook() {
 
 #define get_weight(x) (exp(-(x) * (x) / (2.0 * S * S)))
 
-vec4 hook() {
+vec4 hook()
+{
 	float weight;
-	vec4 csum = PASS3_tex(PASS3_pos);
+	vec2 csum = PASS3_tex(PASS3_pos).xy;
 	float wsum = 1.0;
 	for (float i = 1.0; i <= R; ++i) {
 		weight = get_weight(i);
-		csum += (PASS3_tex(PASS3_pos + vec2(-i, 0.0) * PASS3_pt) + PASS3_tex(PASS3_pos + vec2(i, 0.0) * PASS3_pt)) * weight;
+		csum += (PASS3_tex(PASS3_pos + vec2(-i, 0.0) * PASS3_pt).xy + PASS3_tex(PASS3_pos + vec2(i, 0.0) * PASS3_pt).xy) * weight;
 		wsum += 2.0 * weight;
 	}
-	vec4 original = PASS2_tex(PASS2_pos);
-	return delinearize(original + (original - csum / wsum) * A);
+	vec2 original = PASS2_tex(PASS2_pos).xy;
+	return delinearize(vec4(original + (original - csum / wsum) * A, 0.0, 0.0));
 }
